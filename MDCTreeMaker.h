@@ -3,7 +3,6 @@
 
 #include <fun4all/SubsysReco.h>
 
-#include <gsl/gsl_rng.h>
 #include <string>
 #include <vector>
 #include "TTree.h"

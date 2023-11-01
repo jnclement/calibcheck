@@ -1,45 +1,21 @@
 #include "MDCTreeMaker.h"
-#include <ffaobjects/EventHeaderv1.h>
-#include <calobase/RawCluster.h>
-#include <calobase/RawClusterContainer.h>
-#include <calobase/RawTower.h>
-#include <calobase/RawTowerContainer.h>
-#include <calobase/RawTowerGeom.h>
-#include <calobase/RawTowerGeomContainer.h>
 #include <calobase/TowerInfoContainer.h>
 #include <calobase/TowerInfoContainerv1.h>
-#include <globalvertex/GlobalVertexMap.h>
-#include <globalvertex/GlobalVertex.h>
-#include <g4main/PHG4VtxPoint.h>
 #include <g4main/PHG4TruthInfoContainer.h>
 #include <g4main/PHG4Particle.h>
-#include <mbd/MbdPmtContainer.h>
 #include <fun4all/Fun4AllReturnCodes.h>
 #include <phhepmc/PHHepMCGenEvent.h>
 #include <phool/PHCompositeNode.h>
 #include <phool/PHRandomSeed.h>
 #include <phool/getClass.h>
-#include <mbd/MbdVertexMap.h>
-#include <mbd/MbdVertex.h>
 #include <phhepmc/PHHepMCGenEventMap.h>
-#include <ffaobjects/EventHeaderv1.h>
 #include <g4main/PHG4TruthInfoContainer.h>
 #include <HepMC/GenEvent.h>
-#include <mbd/MbdPmtHit.h>
-#include <jetbackground/TowerBackgroundv1.h>
 #include <cmath>
 #include <cdbobjects/CDBTTree.h>
 #include <TLorentzVector.h>
 #include <ffamodules/CDBInterface.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_rng.h>  // for gsl_rng_uniform_pos
-
-#include <g4main/PHG4HitContainer.h>
-#include <g4main/PHG4Hit.h>
-
 #include <iostream>
-
-#include <centrality/CentralityInfov1.h>
 
 using namespace std;
 //____________________________________________________________________________..
@@ -85,7 +61,9 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
   std::string calibname = "cemc_pi0_twrSlope_v1";
   std::string fieldname = "Femc_datadriven_qm1_correction";
   std::string calibdir = CDBInterface::instance()->getUrl(calibname);
-
+  int nchan = 24576;
+  int etamin = 9;
+  int etamax = 94;
   if(calibdir.empty())
     {
       if(_debug) cout << "calibdir empty!" << endl;
@@ -112,13 +90,13 @@ int MDCTreeMaker::process_event(PHCompositeNode *topNode)
       return Fun4AllReturnCodes::EVENT_OK;
     }
 
-  for(int i=0; i<24576; ++i)
+  for(int i=0; i<nchan; ++i)
     {
       unsigned int key = raw_towers->encode_key(i);
       TowerInfo* tower = raw_towers->get_tower_at_channel(i);
       float calibconst = cdbttree->GetFloatValue(key,fieldname);
       int eta = raw_towers->getTowerEtaBin(key);
-      if(eta < 9 || eta > 94)
+      if(eta < mineta || eta > maxeta)
 	{
 	  cout << "Eta bin / calibration constant / raw tower energy: " << eta << " / " << calibconst << " / " << tower->get_energy() << endl;
 	}
